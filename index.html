@@ -1,20 +1,1306 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0ea5e9"><meta name="description" content="雅思十天冲刺打卡 App"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="雅思冲刺"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="css/style.css"><title>雅思十天冲刺</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <meta name="description" content="雅思十天冲刺打卡 - 带提醒的轻量打卡App" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
+  <title>雅思十天冲刺打卡</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --card-hover: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #0ea5e9;
+      --accent-strong: #0284c7;
+      --success: #16a34a;
+      --success-bg: #dcfce7;
+      --success-border: #86efac;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --border: #e2e8f0;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      padding-bottom: 100px;
+      line-height: 1.5;
+    }
+
+    /* Header */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+
+    .title span {
+      color: var(--accent-strong);
+    }
+
+    .progress-ring {
+      position: relative;
+      width: 52px;
+      height: 52px;
+    }
+
+    .progress-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .progress-ring circle {
+      fill: none;
+      stroke-width: 5;
+    }
+
+    .progress-ring .bg {
+      stroke: #e2e8f0;
+    }
+
+    .progress-ring .fg {
+      stroke: var(--success);
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.4s ease;
+    }
+
+    .progress-ring .percent {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--success);
+    }
+
+    /* Date nav */
+    .date-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .date-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: background 0.15s;
+    }
+
+    .date-btn:active {
+      background: var(--card-hover);
+    }
+
+    .date-btn:disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .current-date {
+      flex: 1;
+      text-align: center;
+    }
+
+    .current-date .day {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .current-date .sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .today-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 6px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* Stats bar - stronger progress */
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      padding: 14px 16px 8px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 12px 8px;
+      text-align: center;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .stat-card .num {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent-strong);
+    }
+
+    .stat-card .label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    /* Daily progress bar - thicker and more prominent */
+    .day-progress-wrap {
+      padding: 0 16px 12px;
+    }
+
+    .day-progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .day-progress-bar {
+      height: 12px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .day-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+      box-shadow: 0 0 8px rgba(22, 163, 74, 0.4);
+    }
+
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .filters::-webkit-scrollbar { display: none; }
+
+    .filter-btn {
+      flex-shrink: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: all 0.15s;
+    }
+
+    .filter-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    /* Task list */
+    .task-list {
+      padding: 0 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .task-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      transition: all 0.2s;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    .task-card.done {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+    }
+
+    .task-card.done .task-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .task-card:active {
+      transform: scale(0.985);
+    }
+
+    .check-box {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      border: 2.5px solid #cbd5e1;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      transition: all 0.2s;
+      margin-top: 1px;
+      background: white;
+    }
+
+    .task-card.done .check-box {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+
+    .task-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+    }
+
+    .module-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      color: white;
+      letter-spacing: 0.2px;
+    }
+
+    .time-tag {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+
+    .duration-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-weight: 500;
+    }
+
+    .task-text {
+      font-size: 14px;
+      line-height: 1.45;
+      word-break: break-word;
+      color: var(--text);
+    }
+
+    .task-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .bell-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: all 0.15s;
+    }
+
+    .bell-btn.has-reminder {
+      background: #fef3c7;
+      border-color: #fbbf24;
+    }
+
+    .bell-btn:active {
+      transform: scale(0.92);
+    }
+
+    .reminder-time {
+      font-size: 10px;
+      color: var(--warning);
+      text-align: center;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    /* Bottom bar */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+      display: flex;
+      gap: 10px;
+      z-index: 50;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+    }
+
+    .bottom-btn {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 13px 8px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: background 0.15s;
+    }
+
+    .bottom-btn:active {
+      background: var(--card-hover);
+    }
+
+    .bottom-btn.primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 24px 24px 0 0;
+      width: 100%;
+      max-width: 500px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 22px 18px calc(22px + env(safe-area-inset-bottom));
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+    }
+
+    .modal h3 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .overview-day {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      background: #f8fafc;
+      cursor: pointer;
+      border: 1px solid var(--border);
+    }
+
+    .overview-day:active {
+      background: #f1f5f9;
+    }
+
+    .overview-day .date {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .overview-day .bar-wrap {
+      flex: 1;
+      margin: 0 14px;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .overview-day .bar {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      border-radius: 999px;
+      transition: width 0.3s;
+    }
+
+    .overview-day .pct {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--success);
+      min-width: 40px;
+      text-align: right;
+    }
+
+    .rules-content {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .rules-content b {
+      color: var(--text);
+    }
+
+    .close-modal {
+      display: block;
+      width: 100%;
+      margin-top: 18px;
+      padding: 14px;
+      background: #f1f5f9;
+      border: none;
+      border-radius: 14px;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Reminder modal specific */
+    .reminder-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .reminder-opt {
+      padding: 14px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      background: #f8fafc;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+    }
+
+    .reminder-opt:active, .reminder-opt.selected {
+      border-color: var(--accent);
+      background: #e0f2fe;
+      color: var(--accent-strong);
+    }
+
+    .custom-time-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .custom-time-row input {
+      flex: 1;
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-size: 15px;
+      background: white;
+    }
+
+    .btn-danger {
+      background: #fef2f2;
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--success);
+      color: white;
+      padding: 12px 22px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 200;
+      pointer-events: none;
+      box-shadow: var(--shadow-md);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.warn {
+      background: var(--warning);
+    }
+
+    /* Install banner */
+    .install-banner {
+      display: none;
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      color: white;
+      padding: 12px 16px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .install-banner.show {
+      display: block;
+    }
+
+    .install-banner button {
+      margin-left: 10px;
+      background: white;
+      color: var(--accent-strong);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-<header class="top"><div><div class="brand">雅思<span>十天冲刺</span></div><div id="daySub" class="muted"></div></div><div class="ring"><b id="totalPct">0%</b></div></header>
-<main>
-<section class="hero"><div><div id="dateTitle" class="date-title"></div><div id="modeText" class="muted"></div></div><button id="notifyBtn" class="ghost">🔔 提醒</button></section>
-<section class="stats"><div><b id="dayDone">0</b><span>今日完成</span></div><div><b id="dayTotal">0</b><span>今日任务</span></div><div><b id="dayRate">0%</b><span>今日进度</span></div></section>
-<div class="bar"><i id="dayBar"></i></div>
-<nav class="tabs"><button class="active" data-tab="today">今天</button><button data-tab="stats">十天统计</button><button data-tab="plan">计划</button></nav>
-<section id="todayView"><div id="tasks"></div></section>
-<section id="statsView" hidden><div id="statCards" class="stat-grid"></div><div class="panel"><h2>十天总进度</h2><div id="overallBars"></div></div></section>
-<section id="planView" hidden><div class="panel"><h2>轻松模式</h2><p>8/12、8/13 减少高耗能任务；被挪走的内容集中到周六、周日。你可以随时把任务顺延到周末。</p><div class="actions"><button id="weekendBtn">查看周末</button><button id="installBtn">添加到主屏幕</button></div></div><div id="datePicker" class="date-grid"></div></section>
-</main>
-<div id="toast" class="toast"></div>
-<div id="reminderModal" class="modal" hidden><div class="modal-box"><h2>设置提醒</h2><p id="reminderLabel" class="muted"></p><div class="reminder-grid"><button data-min="0">开始时</button><button data-min="5">提前 5 分钟</button><button data-min="10">提前 10 分钟</button><button data-min="15">提前 15 分钟</button><button data-min="30">提前 30 分钟</button></div><input id="customTime" type="time"><div class="actions"><button id="saveReminder">保存</button><button id="clearReminder" class="danger">清除</button><button id="closeReminder">取消</button></div></div></div>
-<script src="js/tasks.js"></script><script src="js/storage.js"></script><script src="js/notifications.js"></script><script src="js/app.js"></script>
-</body></html>
+  <div class="install-banner" id="installBanner">
+    可安装到手机主屏幕，获得更好提醒体验
+    <button onclick="promptInstall()">立即安装</button>
+  </div>
+
+  <div class="header">
+    <div class="header-top">
+      <div class="title">雅思<span>十天冲刺</span></div>
+      <div class="progress-ring" id="totalRing">
+        <svg width="52" height="52">
+          <circle class="bg" cx="26" cy="26" r="22" />
+          <circle class="fg" id="ringFg" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" />
+        </svg>
+        <div class="percent" id="totalPercent">0%</div>
+      </div>
+    </div>
+    <div class="date-nav">
+      <button class="date-btn" id="prevDay" onclick="changeDay(-1)">‹</button>
+      <div class="current-date">
+        <div class="day" id="dateLabel">—</div>
+        <div class="sub" id="dateSub">—</div>
+      </div>
+      <button class="date-btn" id="nextDay" onclick="changeDay(1)">›</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="num" id="statDone">0</div>
+      <div class="label">今日完成</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="statTotal">0</div>
+      <div class="label">今日任务</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="statRate">0%</div>
+      <div class="label">今日进度</div>
+    </div>
+  </div>
+
+  <div class="day-progress-wrap">
+    <div class="day-progress-label">
+      <span>今日进度条</span>
+      <span id="progressText">0 / 0</span>
+    </div>
+    <div class="day-progress-bar">
+      <div class="day-progress-fill" id="dayProgressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">全部</button>
+    <button class="filter-btn" data-filter="todo" onclick="setFilter('todo')">未完成</button>
+    <button class="filter-btn" data-filter="done" onclick="setFilter('done')">已完成</button>
+  </div>
+
+  <div class="task-list" id="taskList"></div>
+
+  <div class="bottom-bar">
+    <button class="bottom-btn" onclick="showOverview()">10天总览</button>
+    <button class="bottom-btn" onclick="showRules()">执行规则</button>
+    <button class="bottom-btn primary" onclick="goToday()">回到今天</button>
+  </div>
+
+  <!-- Overview Modal -->
+  <div class="modal-overlay" id="overviewModal" onclick="if(event.target===this)hideModal('overviewModal')">
+    <div class="modal">
+      <h3>📊 10天完成总览</h3>
+      <div id="overviewList"></div>
+      <button class="close-modal" onclick="hideModal('overviewModal')">关闭</button>
+    </div>
+  </div>
+
+  <!-- Rules Modal -->
+  <div class="modal-overlay" id="rulesModal" onclick="if(event.target===this)hideModal('rulesModal')">
+    <div class="modal">
+      <h3>📋 执行规则</h3>
+      <div class="rules-content">
+        <p><b>核心目标</b><br>8月23日不是追求7分，而是拿到真实基线；真正目标是9月底–10月底冲7.0。</p>
+        <p style="margin-top:12px"><b>每天最低线</b><br>工作日：通勤1.5h + 晚上约2.5h；如果加班，只保留听力/阅读1项+口语20分钟。</p>
+        <p style="margin-top:12px"><b>刷题原则</b><br>做1套 ≠ 完成任务；必须复盘错题并找到原文定位/同义替换。</p>
+        <p style="margin-top:12px"><b>听力</b><br>优先把5.0→6.0：先解决定位、拼写、数字、同义替换；不要疯狂倍速。</p>
+        <p style="margin-top:12px"><b>阅读</b><br>优先解决做题顺序、定位、T/F/NG、匹配；每道错题都写错因。</p>
+        <p style="margin-top:12px"><b>写作</b><br>先保证结构、审题、观点清楚和语法稳定；不要背大段范文。</p>
+        <p style="margin-top:12px"><b>口语</b><br>不需要先买昂贵陪练。每天直接跟我练20–30分钟；两次课程口语课用来做正式诊断。</p>
+        <p style="margin-top:12px"><b>词汇</b><br>不背几千个新词；只背真题错题、写作高频表达和自己说不出来的词。</p>
+        <p style="margin-top:12px"><b>睡眠</b><br>8月22日必须优先睡眠；不要熬夜冲刺。</p>
+      </div>
+      <button class="close-modal" onclick="hideModal('rulesModal')">关闭</button>
+    </div>
+  </div>
+
+  <!-- Reminder Modal -->
+  <div class="modal-overlay" id="reminderModal" onclick="if(event.target===this)hideModal('reminderModal')">
+    <div class="modal">
+      <h3>⏰ 设置提醒</h3>
+      <p id="reminderTaskPreview" style="font-size:13px;color:#64748b;margin-bottom:14px;text-align:center;"></p>
+      <div class="reminder-options" id="reminderOptions">
+        <div class="reminder-opt" data-min="5" onclick="selectReminderOpt(this)">提前 5 分钟</div>
+        <div class="reminder-opt" data-min="10" onclick="selectReminderOpt(this)">提前 10 分钟</div>
+        <div class="reminder-opt" data-min="15" onclick="selectReminderOpt(this)">提前 15 分钟</div>
+        <div class="reminder-opt" data-min="30" onclick="selectReminderOpt(this)">提前 30 分钟</div>
+        <div class="reminder-opt" data-min="0" onclick="selectReminderOpt(this)">任务开始时</div>
+      </div>
+      <div class="custom-time-row">
+        <input type="time" id="customReminderTime" />
+        <button class="bottom-btn primary" style="flex:0 0 auto;padding:12px 16px;" onclick="setCustomReminder()">自定义时间</button>
+      </div>
+      <button class="close-modal btn-danger" id="clearReminderBtn" style="display:none;margin-top:12px;" onclick="clearCurrentReminder()">清除此提醒</button>
+      <button class="close-modal" onclick="hideModal('reminderModal')" style="margin-top:10px;">取消</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ========== 完整任务数据 ==========
+    const SCHEDULE = {
+      "2026-08-12": [
+        { time: "14:00–14:30", module: "启动", task: "轻量启动：把资料、真题、耳机、错题本准备好即可，不要补课", duration: "30 min", start: "14:00" },
+        { time: "14:40–15:20", module: "听力", task: "只看听力最核心方法部分（1.5倍速），记3条自己的问题，不要做整套题", duration: "40 min", start: "14:40" },
+        { time: "20:00–20:40", module: "口语", task: "跟我轻量Part 1练习：5–6题即可，每题说15–25秒（和 ChatGPT / Grok 练习）", duration: "40 min", start: "20:00" },
+        { time: "20:50–21:20", module: "词汇", task: "只背今天看过的核心词/同义替换，20个左右就够", duration: "30 min", start: "20:50" },
+        { time: "21:20–22:00", module: "收尾", task: "早点休息，补睡眠。今天以恢复为主，不要硬撑", duration: "40 min", start: "21:20" }
+      ],
+      "2026-08-13": [
+        { time: "09:00–10:00", module: "听力", task: "听力方法课：重点看Section 1–4题型与预测；1.5–2倍速", duration: "60 min", start: "09:00" },
+        { time: "10:10–11:10", module: "听力", task: "剑雅 Listening 1套，严格40分钟+10分钟检查", duration: "60 min", start: "10:10" },
+        { time: "11:10–12:00", module: "听力", task: "逐题复盘；错题必须找到原文位置，分类：没听到/听到了没反应/拼写/定位错", duration: "50 min", start: "11:10" },
+        { time: "13:30–14:30", module: "阅读", task: "阅读方法课：判断题/T-F-NG、匹配题、填空题", duration: "60 min", start: "13:30" },
+        { time: "14:40–15:40", module: "阅读", task: "剑雅 Reading 1套（60分钟）；记录每篇耗时", duration: "60 min", start: "14:40" },
+        { time: "15:40–16:30", module: "阅读", task: "复盘：每个错题写“为什么错+正确定位句+同义替换”", duration: "50 min", start: "15:40" },
+        { time: "16:40–17:40", module: "写作", task: "Task 1课程：图表开头/Overview/比较句；看课+整理自己的4句框架", duration: "60 min", start: "16:40" },
+        { time: "17:50–18:50", module: "写作", task: "Task 2课程：审题→立场→两段主体；完成1个题目的提纲，不急着写全文", duration: "60 min", start: "17:50" },
+        { time: "20:00–21:00", module: "口语", task: "第一次课程口语练习机会：直接预约/使用；要求老师重点纠正流利度、卡顿、语法错误", duration: "60 min", start: "20:00" },
+        { time: "21:10–22:00", module: "口语", task: "跟我模拟Part 1+Part 2；录音；把卡住的10个表达改成你自己能说的简单句（和 ChatGPT / Grok 练习）", duration: "50 min", start: "21:10" },
+        { time: "22:00–22:40", module: "词汇", task: "复习今天错题词+高频同义替换", duration: "40 min", start: "22:00" },
+        { time: "22:40–23:00", module: "复盘", task: "统计：听力正确数、阅读正确数；记录今天最需要修的3个问题", duration: "20 min", start: "22:40" }
+      ],
+      "2026-08-14": [
+        { time: "06:30–08:00", module: "通勤/化妆", task: "听课程回放/错题音频；禁止被动刷课。每次只听一个主题并记3个要点", duration: "90 min", start: "06:30" },
+        { time: "08:00–09:30", module: "通勤", task: "背当天错题词/同义替换；最后10分钟闭眼回忆", duration: "60 min", start: "08:00" },
+        { time: "12:30–12:50", module: "午间", task: "口语微练：看3个问题，每题用英文说30秒（可小声/默练）", duration: "20 min", start: "12:30" },
+        { time: "20:30–21:20", module: "阅读", task: "剑雅 Reading Passage 1–2：专项训练T/F/NG + 定位", duration: "50 min", start: "20:30" },
+        { time: "21:30–22:20", module: "听力", task: "Section 1–2专项：做题+精听错题", duration: "50 min", start: "21:30" },
+        { time: "22:20–23:00", module: "口语", task: "跟我Part 1：10题+纠错（和 ChatGPT / Grok 练习）", duration: "50 min", start: "22:20" }
+      ],
+      "2026-08-15": [
+        { time: "06:30–08:00", module: "通勤/化妆", task: "听课程回放/错题音频；禁止被动刷课。每次只听一个主题并记3个要点", duration: "90 min", start: "06:30" },
+        { time: "08:00–09:30", module: "通勤", task: "背当天错题词/同义替换；最后10分钟闭眼回忆", duration: "60 min", start: "08:00" },
+        { time: "12:30–12:50", module: "午间", task: "口语微练：看3个问题，每题用英文说30秒（可小声/默练）", duration: "20 min", start: "12:30" },
+        { time: "20:30–21:20", module: "写作", task: "Task 2：课程视频+整理自己的万能结构（不是背范文）", duration: "50 min", start: "20:30" },
+        { time: "21:30–22:30", module: "写作", task: "完整写Task 2 1篇，40分钟；剩余20分钟自改", duration: "50 min", start: "21:30" },
+        { time: "22:30–23:00", module: "词汇", task: "整理作文中不会说/写的10个词组", duration: "50 min", start: "22:30" }
+      ],
+      "2026-08-16": [
+        { time: "06:30–08:00", module: "通勤/化妆", task: "听课程回放/错题音频；禁止被动刷课。每次只听一个主题并记3个要点", duration: "90 min", start: "06:30" },
+        { time: "08:00–09:30", module: "通勤", task: "背当天错题词/同义替换；最后10分钟闭眼回忆", duration: "60 min", start: "08:00" },
+        { time: "12:30–12:50", module: "午间", task: "口语微练：看3个问题，每题用英文说30秒（可小声/默练）", duration: "20 min", start: "12:30" },
+        { time: "20:30–21:20", module: "听力", task: "剑雅 Listening 1套，40分钟+检查", duration: "50 min", start: "20:30" },
+        { time: "21:30–22:20", module: "听力", task: "精听错题+同义替换", duration: "50 min", start: "21:30" },
+        { time: "22:20–23:00", module: "口语", task: "跟我Part 2：1题准备1分钟+说2分钟，重复2次（和 ChatGPT / Grok 练习）", duration: "50 min", start: "22:20" }
+      ],
+      "2026-08-17": [
+        { time: "06:30–08:00", module: "通勤/化妆", task: "听课程回放/错题音频；禁止被动刷课。每次只听一个主题并记3个要点", duration: "90 min", start: "06:30" },
+        { time: "08:00–09:30", module: "通勤", task: "背当天错题词/同义替换；最后10分钟闭眼回忆", duration: "60 min", start: "08:00" },
+        { time: "12:30–12:50", module: "午间", task: "口语微练：看3个问题，每题用英文说30秒（可小声/默练）", duration: "20 min", start: "12:30" },
+        { time: "20:30–21:20", module: "阅读", task: "剑雅 Reading 1套；60分钟限时", duration: "50 min", start: "20:30" },
+        { time: "21:30–22:20", module: "阅读", task: "只复盘错题；重点找定位和同义替换", duration: "50 min", start: "21:30" },
+        { time: "22:20–23:00", module: "写作", task: "Task 1：完成一篇，20分钟；检查Overview和比较", duration: "50 min", start: "22:20" }
+      ],
+      "2026-08-18": [
+        { time: "06:30–08:00", module: "通勤/化妆", task: "听课程回放/错题音频；禁止被动刷课。每次只听一个主题并记3个要点", duration: "90 min", start: "06:30" },
+        { time: "08:00–09:30", module: "通勤", task: "背当天错题词/同义替换；最后10分钟闭眼回忆", duration: "60 min", start: "08:00" },
+        { time: "12:30–12:50", module: "午间", task: "口语微练：看3个问题，每题用英文说30秒（可小声/默练）", duration: "20 min", start: "12:30" },
+        { time: "20:30–21:20", module: "写作", task: "Task 2高频题审题训练：5题，每题3–5分钟列观点", duration: "50 min", start: "20:30" },
+        { time: "21:30–22:20", module: "写作", task: "完整Task 2 1篇，40分钟；重点保证清晰，不追求高级词", duration: "50 min", start: "21:30" },
+        { time: "22:20–23:00", module: "口语", task: "跟我Part 3：6题，练“观点+原因+例子”（和 ChatGPT / Grok 练习）", duration: "50 min", start: "22:20" }
+      ],
+      "2026-08-19": [
+        { time: "06:30–08:00", module: "通勤/化妆", task: "听课程回放/错题音频；禁止被动刷课。每次只听一个主题并记3个要点", duration: "90 min", start: "06:30" },
+        { time: "08:00–09:30", module: "通勤", task: "背当天错题词/同义替换；最后10分钟闭眼回忆", duration: "60 min", start: "08:00" },
+        { time: "12:30–12:50", module: "午间", task: "口语微练：看3个问题，每题用英文说30秒（可小声/默练）", duration: "20 min", start: "12:30" },
+        { time: "20:30–21:20", module: "听力", task: "听力错题专项：回顾前几套全部错题", duration: "50 min", start: "20:30" },
+        { time: "21:30–22:20", module: "阅读", task: "阅读错题专项：总结3种最常见陷阱", duration: "50 min", start: "21:30" },
+        { time: "22:20–23:00", module: "口语", task: "课程第二次口语练习：重点要求纠正卡顿、语法、发音", duration: "50 min", start: "22:20" }
+      ],
+      "2026-08-20": [
+        { time: "06:30–08:00", module: "通勤/化妆", task: "听课程回放/错题音频；禁止被动刷课。每次只听一个主题并记3个要点", duration: "90 min", start: "06:30" },
+        { time: "08:00–09:30", module: "通勤", task: "背当天错题词/同义替换；最后10分钟闭眼回忆", duration: "60 min", start: "08:00" },
+        { time: "12:30–12:50", module: "午间", task: "口语微练：看3个问题，每题用英文说30秒（可小声/默练）", duration: "20 min", start: "12:30" },
+        { time: "20:30–21:20", module: "阅读", task: "剑雅 Reading 1套，60分钟（如果时间不足只做2篇）", duration: "50 min", start: "20:30" },
+        { time: "21:30–22:20", module: "听力", task: "剑雅 Listening 1套，严格考试流程", duration: "50 min", start: "21:30" },
+        { time: "22:20–23:00", module: "复盘", task: "记录本周听力/阅读正确数趋势；找出最弱题型", duration: "50 min", start: "22:20" }
+      ],
+      "2026-08-21": [
+        { time: "06:30–08:00", module: "通勤/化妆", task: "听课程回放/错题音频；禁止被动刷课。每次只听一个主题并记3个要点", duration: "90 min", start: "06:30" },
+        { time: "08:00–09:30", module: "通勤", task: "背当天错题词/同义替换；最后10分钟闭眼回忆", duration: "60 min", start: "08:00" },
+        { time: "12:30–12:50", module: "午间", task: "口语微练：看3个问题，每题用英文说30秒（可小声/默练）", duration: "20 min", start: "12:30" },
+        { time: "20:30–21:10", module: "写作", task: "Task 1：20分钟完整写作+10分钟检查", duration: "50 min", start: "20:30" },
+        { time: "21:20–22:10", module: "写作", task: "Task 2：只做审题+提纲3题；不要再堆模板", duration: "50 min", start: "21:20" },
+        { time: "22:10–23:00", module: "口语", task: "跟我做完整Part 1+2+3模拟；重点练不空白（和 ChatGPT / Grok 练习）", duration: "50 min", start: "22:10" }
+      ],
+      "2026-08-22": [
+        { time: "09:00–10:00", module: "听力", task: "补做/复习：剑雅 Listening 1套（严格考试流程）+ 快速复盘错题", duration: "60 min", start: "09:00" },
+        { time: "10:20–11:20", module: "阅读", task: "补做：剑雅 Reading Passage 1–2，重点练定位和同义替换", duration: "60 min", start: "10:20" },
+        { time: "11:30–12:10", module: "复盘", task: "把前几天听力/阅读错题再过一遍，更新《我的雅思错误清单》", duration: "40 min", start: "11:30" },
+        { time: "14:00–15:00", module: "写作", task: "Task 2：完整写1篇（40分钟）+ 自查结构与观点是否清晰", duration: "60 min", start: "14:00" },
+        { time: "15:20–16:10", module: "口语", task: "跟我完整模拟 Part 1 + Part 2（录音），重点减少卡顿（和 ChatGPT / Grok 练习）", duration: "50 min", start: "15:20" },
+        { time: "16:20–17:00", module: "词汇", task: "集中复习本周错题词 + 高频同义替换", duration: "40 min", start: "16:20" },
+        { time: "20:00–20:40", module: "听力", task: "再听错题音频/熟悉素材，只听不学新内容", duration: "40 min", start: "20:00" },
+        { time: "21:00–21:40", module: "考前准备", task: "准考证/证件/路线/考试用品/早餐全部确认；早点睡", duration: "40 min", start: "21:00" }
+      ],
+      "2026-08-23": [
+        { time: "起床后", module: "状态", task: "正常早餐，保持轻松；不要刷整套题", duration: "20 min", start: "07:00" },
+        { time: "考前", module: "听力", task: "听10–15分钟熟悉素材，让耳朵进入英语状态", duration: "15 min", start: "08:00" },
+        { time: "考前", module: "口语", task: "复习自己最常用的10个表达；不背新答案", duration: "15 min", start: "08:20" },
+        { time: "考前", module: "词汇", task: "快速过一遍本周高频同义替换（只看不背）", duration: "10 min", start: "08:40" },
+        { time: "考试", module: "IELTS", task: "正式考试：把它当作一次诊断考试，记录四科真实水平", duration: "165 min", start: "09:00" },
+        { time: "考后", module: "复盘", task: "当天只记录：四科感受、卡点、最需要提分的3项；不要反刍分数", duration: "20 min", start: "13:00" }
+      ]
+    };
+
+    const DATES = Object.keys(SCHEDULE).sort();
+    const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
+    const MODULE_COLORS = {
+      "听力": "#3b82f6", "阅读": "#8b5cf6", "写作": "#ec4899", "口语": "#14b8a6",
+      "词汇": "#f59e0b", "复盘": "#64748b", "启动": "#22c55e", "收尾": "#64748b",
+      "通勤/化妆": "#6366f1", "通勤": "#6366f1", "午间": "#f97316",
+      "考前准备": "#ef4444", "状态": "#22c55e", "IELTS": "#e11d48"
+    };
+
+    // ========== State ==========
+    let currentDate = null;
+    let filter = "all";
+    let currentReminderKey = null;
+    let selectedMinutes = 10;
+    const STORAGE_KEY = "ielts_checkin_v2";
+    const REMINDER_KEY = "ielts_reminders_v1";
+    let deferredPrompt = null;
+
+    function loadProgress() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch { return {}; }
+    }
+    function saveProgress(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+    function loadReminders() {
+      try { return JSON.parse(localStorage.getItem(REMINDER_KEY) || "{}"); } catch { return {}; }
+    }
+    function saveReminders(data) {
+      localStorage.setItem(REMINDER_KEY, JSON.stringify(data));
+    }
+
+    function isDone(date, index) {
+      const p = loadProgress();
+      return !!(p[date] && p[date][index]);
+    }
+
+    function toggleDone(date, index) {
+      const p = loadProgress();
+      if (!p[date]) p[date] = {};
+      p[date][index] = !p[date][index];
+      saveProgress(p);
+      render();
+      updateTotalRing();
+      if (p[date][index]) showToast("已完成 ✓");
+    }
+
+    function getReminderKey(date, index) {
+      return date + "_" + index;
+    }
+
+    function getReminder(date, index) {
+      return loadReminders()[getReminderKey(date, index)] || null;
+    }
+
+    // ========== Date helpers ==========
+    function todayStr() {
+      const d = new Date();
+      return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+    }
+
+    function formatDateLabel(dateStr) {
+      const d = new Date(dateStr + "T00:00:00");
+      return (d.getMonth()+1) + "月" + d.getDate() + "日 周" + WEEKDAYS[d.getDay()];
+    }
+
+    function getDayIndex(dateStr) {
+      return DATES.indexOf(dateStr);
+    }
+
+    function parseTaskStart(dateStr, startHHMM) {
+      // startHHMM like "14:00"
+      if (!startHHMM || !startHHMM.includes(":")) return null;
+      const [h, m] = startHHMM.split(":").map(Number);
+      const d = new Date(dateStr + "T00:00:00");
+      d.setHours(h, m, 0, 0);
+      return d;
+    }
+
+    // ========== Render ==========
+    function render() {
+      if (!currentDate || !SCHEDULE[currentDate]) {
+        document.getElementById("taskList").innerHTML = `<div class="empty-state"><div class="icon">📅</div><div>今天不在冲刺计划内</div><div style="margin-top:8px;font-size:13px">计划从 8月12日 到 8月23日</div></div>`;
+        document.getElementById("dateLabel").textContent = formatDateLabel(currentDate || todayStr());
+        document.getElementById("dateSub").textContent = "不在计划范围";
+        document.getElementById("statDone").textContent = "0";
+        document.getElementById("statTotal").textContent = "0";
+        document.getElementById("statRate").textContent = "0%";
+        document.getElementById("dayProgressFill").style.width = "0%";
+        document.getElementById("progressText").textContent = "0 / 0";
+        return;
+      }
+
+      const tasks = SCHEDULE[currentDate];
+      const isToday = currentDate === todayStr();
+      const dayIdx = getDayIndex(currentDate);
+
+      document.getElementById("dateLabel").innerHTML = formatDateLabel(currentDate) + (isToday ? '<span class="today-badge">今天</span>' : "");
+      document.getElementById("dateSub").textContent = `第 ${dayIdx + 1} / ${DATES.length} 天` + (currentDate === "2026-08-22" ? " · 轻量模式" : "") + (currentDate === "2026-08-23" ? " · 考试日" : "");
+
+      document.getElementById("prevDay").disabled = dayIdx <= 0;
+      document.getElementById("nextDay").disabled = dayIdx >= DATES.length - 1;
+
+      let doneCount = 0;
+      tasks.forEach((_, i) => { if (isDone(currentDate, i)) doneCount++; });
+      const rate = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
+
+      document.getElementById("statDone").textContent = doneCount;
+      document.getElementById("statTotal").textContent = tasks.length;
+      document.getElementById("statRate").textContent = rate + "%";
+      document.getElementById("dayProgressFill").style.width = rate + "%";
+      document.getElementById("progressText").textContent = doneCount + " / " + tasks.length;
+
+      const list = document.getElementById("taskList");
+      list.innerHTML = "";
+
+      let shown = 0;
+      tasks.forEach((t, i) => {
+        const done = isDone(currentDate, i);
+        if (filter === "todo" && done) return;
+        if (filter === "done" && !done) return;
+        shown++;
+
+        const color = MODULE_COLORS[t.module] || "#64748b";
+        const rem = getReminder(currentDate, i);
+        const remTimeStr = rem ? new Date(rem).toLocaleTimeString("zh-CN", {hour:"2-digit", minute:"2-digit"}) : "";
+
+        const card = document.createElement("div");
+        card.className = "task-card" + (done ? " done" : "");
+        
+        const checkArea = document.createElement("div");
+        checkArea.className = "check-box";
+        checkArea.textContent = done ? "✓" : "";
+        checkArea.onclick = (e) => { e.stopPropagation(); toggleDone(currentDate, i); };
+
+        const body = document.createElement("div");
+        body.className = "task-body";
+        body.onclick = () => toggleDone(currentDate, i);
+        body.innerHTML = `
+          <div class="task-meta">
+            <span class="module-tag" style="background:${color}">${t.module}</span>
+            <span class="time-tag">${t.time}</span>
+            <span class="duration-tag">${t.duration}</span>
+          </div>
+          <div class="task-text">${t.task}</div>
+        `;
+
+        const actions = document.createElement("div");
+        actions.className = "task-actions";
+        const bell = document.createElement("button");
+        bell.className = "bell-btn" + (rem ? " has-reminder" : "");
+        bell.innerHTML = rem ? "🔔" : "🔕";
+        bell.title = "设置提醒";
+        bell.onclick = (e) => {
+          e.stopPropagation();
+          openReminderModal(currentDate, i, t);
+        };
+        actions.appendChild(bell);
+        if (rem) {
+          const tm = document.createElement("div");
+          tm.className = "reminder-time";
+          tm.textContent = remTimeStr;
+          actions.appendChild(tm);
+        }
+
+        card.appendChild(checkArea);
+        card.appendChild(body);
+        card.appendChild(actions);
+        list.appendChild(card);
+      });
+
+      if (shown === 0) {
+        list.innerHTML = `<div class="empty-state"><div class="icon">${filter === "done" ? "🎉" : "✅"}</div><div>${filter === "done" ? "还没有完成任何任务" : "今日任务全部完成！"}</div></div>`;
+      }
+    }
+
+    function updateTotalRing() {
+      let totalTasks = 0, totalDone = 0;
+      DATES.forEach(date => {
+        const tasks = SCHEDULE[date];
+        totalTasks += tasks.length;
+        tasks.forEach((_, i) => { if (isDone(date, i)) totalDone++; });
+      });
+      const pct = totalTasks ? Math.round((totalDone / totalTasks) * 100) : 0;
+      const circumference = 138.2;
+      const offset = circumference - (pct / 100) * circumference;
+      document.getElementById("ringFg").style.strokeDashoffset = offset;
+      document.getElementById("totalPercent").textContent = pct + "%";
+    }
+
+    function changeDay(delta) {
+      const idx = getDayIndex(currentDate);
+      const newIdx = idx + delta;
+      if (newIdx >= 0 && newIdx < DATES.length) {
+        currentDate = DATES[newIdx];
+        filter = "all";
+        document.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));
+        render();
+      }
+    }
+
+    function goToday() {
+      const t = todayStr();
+      if (SCHEDULE[t]) currentDate = t;
+      else if (t < DATES[0]) currentDate = DATES[0];
+      else currentDate = DATES[DATES.length - 1];
+      filter = "all";
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));
+      render();
+    }
+
+    function setFilter(f) {
+      filter = f;
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("active", b.dataset.filter === f));
+      render();
+    }
+
+    function showOverview() {
+      const list = document.getElementById("overviewList");
+      list.innerHTML = "";
+      DATES.forEach(date => {
+        const tasks = SCHEDULE[date];
+        let done = 0;
+        tasks.forEach((_, i) => { if (isDone(date, i)) done++; });
+        const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
+        const d = new Date(date + "T00:00:00");
+        const label = `${d.getMonth()+1}/${d.getDate()} 周${WEEKDAYS[d.getDay()]}`;
+        const div = document.createElement("div");
+        div.className = "overview-day";
+        div.onclick = () => {
+          currentDate = date;
+          hideModal("overviewModal");
+          filter = "all";
+          document.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));
+          render();
+        };
+        div.innerHTML = `<div class="date">${label}</div><div class="bar-wrap"><div class="bar" style="width:${pct}%"></div></div><div class="pct">${pct}%</div>`;
+        list.appendChild(div);
+      });
+      document.getElementById("overviewModal").classList.add("show");
+    }
+
+    function showRules() {
+      document.getElementById("rulesModal").classList.add("show");
+    }
+
+    function hideModal(id) {
+      document.getElementById(id).classList.remove("show");
+    }
+
+    function showToast(msg, isWarn) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.className = "toast" + (isWarn ? " warn show" : " show");
+      setTimeout(() => t.classList.remove("show"), 1800);
+    }
+
+    // ========== Reminder system ==========
+    function openReminderModal(date, index, task) {
+      currentReminderKey = getReminderKey(date, index);
+      document.getElementById("reminderTaskPreview").textContent = task.module + " · " + task.time + " · " + task.task.slice(0, 40) + (task.task.length > 40 ? "…" : "");
+      
+      const existing = getReminder(date, index);
+      document.getElementById("clearReminderBtn").style.display = existing ? "block" : "none";
+      
+      // highlight default
+      document.querySelectorAll(".reminder-opt").forEach(el => {
+        el.classList.toggle("selected", el.dataset.min === "10");
+      });
+      selectedMinutes = 10;
+
+      // set custom time input to task start if possible
+      const startDate = parseTaskStart(date, task.start);
+      if (startDate) {
+        const hh = String(startDate.getHours()).padStart(2,"0");
+        const mm = String(startDate.getMinutes()).padStart(2,"0");
+        document.getElementById("customReminderTime").value = hh + ":" + mm;
+      }
+
+      document.getElementById("reminderModal").classList.add("show");
+    }
+
+    function selectReminderOpt(el) {
+      document.querySelectorAll(".reminder-opt").forEach(e => e.classList.remove("selected"));
+      el.classList.add("selected");
+      selectedMinutes = parseInt(el.dataset.min, 10);
+      
+      // immediately set based on task start
+      const [date, idxStr] = currentReminderKey.split("_");
+      const index = parseInt(idxStr, 10);
+      const task = SCHEDULE[date][index];
+      const startDate = parseTaskStart(date, task.start);
+      if (!startDate) {
+        showToast("此任务没有明确开始时间，请用自定义时间", true);
+        return;
+      }
+      const remindAt = new Date(startDate.getTime() - selectedMinutes * 60 * 1000);
+      setReminderTime(remindAt);
+    }
+
+    function setCustomReminder() {
+      const val = document.getElementById("customReminderTime").value;
+      if (!val) {
+        showToast("请选择时间", true);
+        return;
+      }
+      const [date] = currentReminderKey.split("_");
+      const [h, m] = val.split(":").map(Number);
+      const d = new Date(date + "T00:00:00");
+      d.setHours(h, m, 0, 0);
+      setReminderTime(d);
+    }
+
+    async function setReminderTime(dateObj) {
+      // request permission first
+      if (!("Notification" in window)) {
+        showToast("当前浏览器不支持通知", true);
+        return;
+      }
+      let perm = Notification.permission;
+      if (perm === "default") {
+        perm = await Notification.requestPermission();
+      }
+      if (perm !== "granted") {
+        showToast("需要开启通知权限才能提醒", true);
+        return;
+      }
+
+      const rems = loadReminders();
+      rems[currentReminderKey] = dateObj.toISOString();
+      saveReminders(rems);
+      hideModal("reminderModal");
+      render();
+      showToast("提醒已设置 · " + dateObj.toLocaleTimeString("zh-CN", {hour:"2-digit", minute:"2-digit"}));
+    }
+
+    function clearCurrentReminder() {
+      const rems = loadReminders();
+      delete rems[currentReminderKey];
+      saveReminders(rems);
+      hideModal("reminderModal");
+      render();
+      showToast("提醒已清除");
+    }
+
+    // Check reminders every 20 seconds
+    function checkReminders() {
+      if (Notification.permission !== "granted") return;
+      const now = Date.now();
+      const rems = loadReminders();
+      let changed = false;
+      for (const key in rems) {
+        const t = new Date(rems[key]).getTime();
+        // fire if within the last 25 seconds window (to catch the check)
+        if (t <= now && t > now - 25000) {
+          const [date, idxStr] = key.split("_");
+          const index = parseInt(idxStr, 10);
+          const task = SCHEDULE[date] && SCHEDULE[date][index];
+          if (task) {
+            const title = "雅思打卡提醒";
+            const body = task.module + " · " + task.time + "\n" + task.task;
+            try {
+              new Notification(title, {
+                body: body,
+                icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>",
+                tag: key,
+                requireInteraction: true
+              });
+            } catch(e) {}
+          }
+          // remove after firing so it doesn't repeat
+          delete rems[key];
+          changed = true;
+        }
+      }
+      if (changed) saveReminders(rems);
+    }
+
+    // ========== PWA install ==========
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById("installBanner").classList.add("show");
+    });
+
+    function promptInstall() {
+      if (!deferredPrompt) {
+        showToast("请用浏览器菜单「添加到主屏幕」", true);
+        return;
+      }
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        deferredPrompt = null;
+        document.getElementById("installBanner").classList.remove("show");
+      });
+    }
+
+    // Service Worker registration
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+
+    // ========== Init ==========
+    (function init() {
+      const t = todayStr();
+      if (SCHEDULE[t]) currentDate = t;
+      else if (t < DATES[0]) currentDate = DATES[0];
+      else currentDate = DATES[DATES.length - 1];
+      render();
+      updateTotalRing();
+      setInterval(checkReminders, 20000);
+      // also check once after 2s
+      setTimeout(checkReminders, 2000);
+    })();
+  </script>
+</body>
+</html>
