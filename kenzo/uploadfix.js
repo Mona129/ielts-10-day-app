@@ -18,7 +18,7 @@
 
   function fmt(n){return n<1024*1024?(n/1024).toFixed(1)+' KB':(n/1024/1024).toFixed(1)+' MB'}
   async function read(){
-    const r=await fetch(SUPA+'/rest/v1/kenzo_app_state?id=eq.main&select=content&_='+Date.now(),{headers:H,cache:'no-store'});
+    const r=await fetch(SUPA+'/rest/v1/kenzo_app_state?id=eq.main&select=content&limit=1',{headers:{...H,'Cache-Control':'no-cache','Pragma':'no-cache'},cache:'no-store'});
     if(!r.ok)throw new Error(await r.text());
     const a=await r.json(),c=a[0]?.content||{};state={text:c.text||{},media:c.media||{}};
   }
@@ -28,7 +28,7 @@
   }
   function ensure(){
     if(panel)return;
-    panel=document.createElement('div');panel.className='ku-panel';panel.innerHTML=`<div class="ku-sheet"><div class="ku-head"><h3>上传 8 个参考视频</h3><button class="ku-x">×</button></div><div class="ku-summary"></div><div class="ku-list"></div><div class="ku-note">上传会直接写入云端并自动保存。每条都会显示真实进度；如果网络中断会自动重试 3 次，不会再只显示一个“上传失败”。</div></div>`;document.body.appendChild(panel);panel.querySelector('.ku-x').onclick=()=>panel.classList.remove('show');
+    panel=document.createElement('div');panel.className='ku-panel';panel.innerHTML=`<div class="ku-sheet"><div class="ku-head"><h3>上传 8 个参考视频</h3><button class="ku-x">×</button></div><div class="ku-summary"></div><div class="ku-list"></div><div class="ku-note">上传会直接写入云端并自动保存。已经有 ✓ 的不用重传；只补没有保存的位置即可。</div></div>`;document.body.appendChild(panel);panel.querySelector('.ku-x').onclick=()=>panel.classList.remove('show');
     const list=panel.querySelector('.ku-list');
     labels.forEach((lab,i)=>{const d=document.createElement('div');d.className='ku-row';d.innerHTML=`<div class="ku-top"><b>${lab}</b><span class="ku-status">未上传</span></div><div class="ku-file">—</div><button class="ku-pick">选择视频</button><div class="ku-bar"><i></i></div><div class="ku-err"></div>`;list.appendChild(d);rows.push(d);d.querySelector('.ku-pick').onclick=()=>pick(i)});
   }
@@ -39,19 +39,19 @@
   }
   function pick(i){const inp=document.createElement('input');inp.type='file';inp.accept='video/*,.mp4,.mov,.m4v';inp.onchange=()=>{const f=inp.files?.[0];if(f)upload(i,f)};inp.click()}
   function xhrUpload(path,file,onProgress){
-    return new Promise((resolve,reject)=>{const x=new XMLHttpRequest();x.open('POST',`${SUPA}/storage/v1/object/${BUCKET}/${path}`,true);x.setRequestHeader('apikey',KEY);x.setRequestHeader('Authorization','Bearer '+KEY);x.setRequestHeader('Content-Type',file.type||'application/octet-stream');x.setRequestHeader('x-upsert','true');x.timeout=180000;x.upload.onprogress=e=>{if(e.lengthComputable)onProgress(e.loaded/e.total)};x.onload=()=>x.status>=200&&x.status<300?resolve(x.responseText):reject(new Error(`HTTP ${x.status} ${x.responseText||''}`));x.onerror=()=>reject(new Error('网络连接中断'));x.ontimeout=()=>reject(new Error('上传超时'));x.send(file)})
+    return new Promise((resolve,reject)=>{const x=new XMLHttpRequest();x.open('POST',`${SUPA}/storage/v1/object/${BUCKET}/${path}`,true);x.setRequestHeader('apikey',KEY);x.setRequestHeader('Authorization','Bearer '+KEY);x.setRequestHeader('Content-Type',file.type||'application/octet-stream');x.setRequestHeader('x-upsert','true');x.timeout=240000;x.upload.onprogress=e=>{if(e.lengthComputable)onProgress(e.loaded/e.total)};x.onload=()=>x.status>=200&&x.status<300?resolve(x.responseText):reject(new Error(`HTTP ${x.status} ${x.responseText||''}`));x.onerror=()=>reject(new Error('网络连接中断'));x.ontimeout=()=>reject(new Error('上传超时'));x.send(file)})
   }
   async function upload(i,file){
     const row=rows[i],pick=row.querySelector('.ku-pick'),status=row.querySelector('.ku-status'),bar=row.querySelector('.ku-bar'),fill=bar.querySelector('i'),err=row.querySelector('.ku-err'),fileBox=row.querySelector('.ku-file');
     pick.disabled=true;err.style.display='none';bar.style.display='block';fill.style.width='0%';fileBox.textContent=`${file.name} · ${fmt(file.size)}`;
-    if(file.size>49*1024*1024){pick.disabled=false;status.textContent='文件过大';err.style.display='block';err.textContent=`这个文件是 ${fmt(file.size)}。当前云端单文件上限约 50 MB；iPhone 从“照片”导出的 MOV 有时会突然变很大。请从“文件”里选原始 MP4 / 较小版本。`;return}
+    if(file.size>49*1024*1024){pick.disabled=false;status.textContent='文件过大';err.style.display='block';err.textContent=`这个文件是 ${fmt(file.size)}。请改用小于 49 MB 的 MP4 / MOV。`;return}
     const ext=(file.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4',path=`slots/ref-${i}-${Date.now()}.${ext}`;
     let last;
     for(let attempt=1;attempt<=3;attempt++){
-      try{status.textContent=attempt===1?'上传中…':`重试 ${attempt}/3…`;await xhrUpload(path,file,p=>{fill.style.width=Math.max(2,Math.round(p*100))+'%';status.textContent=`上传 ${Math.round(p*100)}%`});last=null;break}catch(e){last=e;await new Promise(r=>setTimeout(r,700*attempt))}
+      try{status.textContent=attempt===1?'上传中…':`重试 ${attempt}/3…`;await xhrUpload(path,file,p=>{fill.style.width=Math.max(2,Math.round(p*100))+'%';status.textContent=`上传 ${Math.round(p*100)}%`});last=null;break}catch(e){last=e;await new Promise(r=>setTimeout(r,900*attempt))}
     }
     if(last){pick.disabled=false;status.textContent='上传失败';err.style.display='block';err.textContent=last.message||String(last);return}
-    try{status.textContent='保存到页面…';const url=`${SUPA}/storage/v1/object/public/${BUCKET}/${path}`;state.media['ref-'+i]={url,type:file.type||'video/mp4',name:file.name,updatedAt:new Date().toISOString()};await save();fill.style.width='100%';status.textContent='✓ 已保存';status.classList.add('ku-ok');pick.disabled=false;paint();setTimeout(()=>{try{window.dispatchEvent(new Event('focus'))}catch(e){}},100)}catch(e){pick.disabled=false;status.textContent='视频已上传，保存映射失败';err.style.display='block';err.textContent=e.message||String(e)}
+    try{status.textContent='保存到页面…';const url=`${SUPA}/storage/v1/object/public/${BUCKET}/${path}`;state.media['ref-'+i]={url,type:file.type||'video/mp4',name:file.name,updatedAt:new Date().toISOString()};await save();fill.style.width='100%';status.textContent='✓ 已保存';status.classList.add('ku-ok');pick.disabled=false;await read();paint();setTimeout(()=>location.reload(),450)}catch(e){pick.disabled=false;status.textContent='视频已上传，保存映射失败';err.style.display='block';err.textContent=e.message||String(e)}
   }
   btn.onclick=async()=>{ensure();panel.classList.add('show');panel.querySelector('.ku-summary').textContent='读取云端…';try{await read();paint()}catch(e){panel.querySelector('.ku-summary').textContent='读取云端失败：'+e.message}};
 })();
