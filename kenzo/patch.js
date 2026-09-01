@@ -1,0 +1,2 @@
+/* Safari/Douyin sheet interaction patch: keep the detail sheet open while switching inner tabs. */
+document.addEventListener('click',function(ev){const b=ev.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;if(S.world==='dy'&&document.querySelector('#detail').classList.contains('show')&&(a==='ctab'||a==='wtab')){ev.preventDefault();ev.stopImmediatePropagation();if(a==='ctab')S.contentTab=Number(b.dataset.v);if(a==='wtab')S.workflowTab=Number(b.dataset.v);document.querySelector('#detailBody').innerHTML=details();}},true);
