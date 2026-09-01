@@ -1,0 +1,43 @@
+name: Cache KENZO reference videos
+
+on:
+  push:
+    paths:
+      - '.github/workflows/kenzo-cache-videos.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cache:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download eight verified MP4s
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p kenzo/static-videos
+          BASE='https://mysbpummazvgyesuhlfg.supabase.co/functions/v1/kenzo-media-upload?slot=ref24-'
+          for i in 0 1 2 3 4 5 6 7; do
+            n=$(printf '%02d' $((i+1)))
+            curl -fL --retry 4 --retry-delay 2 --connect-timeout 20 --max-time 180 "${BASE}${i}" -o "kenzo/static-videos/${n}.mp4"
+            test -s "kenzo/static-videos/${n}.mp4"
+          done
+          ls -lh kenzo/static-videos
+      - name: Commit static videos
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kenzo/static-videos
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+            exit 0
+          fi
+          git commit -m 'Cache 8 KENZO reference videos as static MP4s'
+          git push origin HEAD:main
