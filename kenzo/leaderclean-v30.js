@@ -5,7 +5,8 @@
     if(!dock)return false;
     let label='参考案例';
     try{if(typeof S!=='undefined'&&S.lang==='tw')label='參考案例'}catch(e){}
-    dock.innerHTML='<b>'+label+' <span aria-hidden="true" style="display:inline;font-size:15px;color:inherit;margin:0 0 0 5px">›</span></b>';
+    const desired='<b>'+label+'</b>';
+    if(dock.innerHTML!==desired)dock.innerHTML=desired;
     return true;
   }
   cleanDock();
