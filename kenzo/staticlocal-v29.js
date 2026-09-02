@@ -1,6 +1,6 @@
 /* V29 — final reference-video path: same-origin static MP4s on GitHub Pages. */
 (function(){
-  const V=Array.from({length:8},(_,i)=>`static-videos/${String(i+1).padStart(2,'0')}.mp4?v=33`);
+  const V=Array.from({length:8},(_,i)=>`static-videos/${String(i+1).padStart(2,'0')}.mp4?v=34`);
   const CASE=[
     ['LOOK RECEIPT · 发票','https://mysbpummazvgyesuhlfg.supabase.co/storage/v1/object/public/kenzo-social-media/slots/case-0-1788279842958.gif','把一套 Look 变成一张会打印出来的 Receipt。'],
     ['PRODUCT COLLAGE · 拼贴','https://mysbpummazvgyesuhlfg.supabase.co/storage/v1/object/public/kenzo-social-media/slots/case-1-1788279849939.gif','产品和细节一块一块出现，最后组成完整视觉。'],
