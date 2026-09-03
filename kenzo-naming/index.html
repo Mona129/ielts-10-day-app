@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f7f7f5">
+  <title>KENZO 新账号命名方向</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="plans">
+  <main class="shell">
+    <header class="masthead">
+      <div class="wordmark">KENZO</div>
+      <nav class="page-switch" aria-label="页面切换"><a class="active" href="./">完整方案</a><a href="all.html">全部名称</a></nav>
+      <div class="doc-meta">ACCOUNT NAMING · DISCUSSION</div>
+    </header>
+
+    <section class="page-title">
+      <div><span>09 DIRECTIONS</span><h1>账号命名方向</h1></div>
+      <div class="title-actions"><button id="showSelected">★ 已选 <b id="starCount">0</b></button><button onclick="window.print()">打印 / 存为PDF</button></div>
+    </section>
+
+    <nav class="filters" id="filters" aria-label="方案分类"></nav>
+    <section class="plan-grid" id="planGrid"></section>
+
+    <section class="comparison">
+      <header><span>COMPARE</span><h2>方向对比</h2></header>
+      <div class="table-wrap"><table><thead><tr><th>名称</th><th>核心气质</th><th>更适合的发展方向</th></tr></thead><tbody id="compareBody"></tbody></table></div>
+    </section>
+
+    <footer><span>KENZO CHINA · NEW SOCIAL MEDIA</span><span>点击名称查看完整方案 · 选择和备注保存在当前设备</span></footer>
+  </main>
+
+  <dialog id="detailDialog" class="detail-dialog">
+    <button class="dialog-close" id="dialogClose" aria-label="关闭">×</button>
+    <div id="detailContent"></div>
+  </dialog>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
