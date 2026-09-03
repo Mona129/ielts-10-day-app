@@ -40,7 +40,7 @@
       <section class="detail-section"><label>03 / 内容体系</label><div class="modules">${item.modules.map((module,index)=>`<div><b>${String(index+1).padStart(2,"0")}</b><span><strong>${esc(module[0])}</strong><small>${esc(module[1])}</small></span></div>`).join("")}</div></section>
       <section class="detail-section"><label>04 / 固定表达</label>${item.phrases.map((phrase)=>`<blockquote>“${esc(phrase)}”</blockquote>`).join("")}</section>
       <section class="detail-section split"><div><label>05 / 优势</label><p>${esc(item.strength)}</p></div><div><label>06 / 需要注意</label><p>${esc(item.caution)}</p></div></section>
-      <section class="detail-section"><label for="noteField">07 / 讨论备注</label><textarea id="noteField" placeholder="记录领导的第一反应、修改意见或最终选择…">${esc(notes[id]||"")}</textarea></section>`;
+      <section class="detail-section"><label for="noteField">07 / 讨论备注</label><textarea id="noteField">${esc(notes[id]||"")}</textarea></section>`;
       detail.querySelector("[data-detail-star]").onclick = () => toggleStar(id);
       detail.querySelector("textarea").oninput = (event) => { notes[id] = event.target.value; write("kenzo-public-plan-notes", notes); };
       if (!dialog.open) dialog.showModal();
