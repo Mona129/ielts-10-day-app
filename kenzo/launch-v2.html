@@ -605,6 +605,7 @@ const GROUPS = [{"name": "KENZO（玩家版）", "bio": "衣服从来不只有�
 const CLOUD_URL = "https://mysbpummazvgyesuhlfg.supabase.co";
 const CLOUD_KEY = "sb_publishable_i6t7GeNNK3FY1yG4osThYw_39OtCCAS";
 const CLOUD_ROW = "launch-v2";
+const SCHEMA_VERSION = 3;
 const STORAGE_PREFIX = "kenzo_launch_v2_";
 const MEDIA_STORAGE_KEY = "kenzo_launch_media_v3";
 const MEDIA_BUCKET = "kenzo-social-media";
@@ -615,6 +616,7 @@ const CLOUD_HEADERS = {
 
 let cloudText = {};
 let cloudMedia = {};
+let defaultText = {};
 let remoteUpdatedAt = "";
 let cloudLoaded = false;
 let applyingSavedText = false;
@@ -663,6 +665,7 @@ function renderAccounts() {
   `).join("");
 
   registerEditableContent();
+  captureDefaultText();
   restoreSaved();
   applyEditMode();
 }
@@ -696,6 +699,46 @@ function registerEditableContent() {
     el.setAttribute("data-edit", "");
     el.spellcheck = false;
   });
+}
+
+function captureDefaultText() {
+  document.querySelectorAll("[data-key]").forEach(el => {
+    if (!Object.prototype.hasOwnProperty.call(defaultText, el.dataset.key)) {
+      defaultText[el.dataset.key] = el.innerText;
+    }
+  });
+}
+
+function migrateTextState(data, schemaVersion) {
+  const migrated = { ...data };
+  if (Number(schemaVersion || 0) >= SCHEMA_VERSION) return migrated;
+
+  const resetExact = new Set([
+    "intro_text",
+    "stock_rule",
+    "workflow_note",
+    "section_desc_0",
+    "section_desc_1",
+    "section_desc_2",
+    "wf1p",
+    "wf2p",
+    "wf3p",
+    "wf5h",
+    "wf5p"
+  ]);
+  Object.keys(migrated).forEach(key => {
+    if (
+      resetExact.has(key) ||
+      key.startsWith("w1_") ||
+      key.startsWith("pace") ||
+      key.startsWith("post_meta_") ||
+      key.startsWith("workflow_tag_") ||
+      key.startsWith("intro_chip_")
+    ) {
+      delete migrated[key];
+    }
+  });
+  return migrated;
 }
 
 function applyEditMode() {
@@ -767,11 +810,13 @@ function replaceLocalState(data) {
   }
 }
 
-function applyTextState(data) {
+function applyTextState(data, resetMissing = false) {
   applyingSavedText = true;
   document.querySelectorAll("[data-key]").forEach(el => {
     if (Object.prototype.hasOwnProperty.call(data, el.dataset.key)) {
       el.innerText = String(data[el.dataset.key]);
+    } else if (resetMissing && Object.prototype.hasOwnProperty.call(defaultText, el.dataset.key)) {
+      el.innerText = defaultText[el.dataset.key];
     }
   });
   applyingSavedText = false;
@@ -839,7 +884,7 @@ async function saveCloudState(options = {}) {
         },
         body:JSON.stringify({
           id:CLOUD_ROW,
-          content:{ text:snapshot, media:mediaSnapshot, initialized:true, schemaVersion:3 },
+          content:{ text:snapshot, media:mediaSnapshot, initialized:true, schemaVersion:SCHEMA_VERSION },
           updated_at:updatedAt
         }),
         cache:"no-store",
@@ -871,9 +916,11 @@ async function loadCloudState() {
 
   try {
     const row = await fetchCloudRow();
-    const remoteText = row?.content?.text && typeof row.content.text === "object"
+    const rawRemoteText = row?.content?.text && typeof row.content.text === "object"
       ? row.content.text
       : {};
+    const sourceSchemaVersion = Number(row?.content?.schemaVersion || 0);
+    const remoteText = migrateTextState(rawRemoteText, sourceSchemaVersion);
     const remoteMedia = row?.content?.media && typeof row.content.media === "object"
       ? row.content.media
       : {};
@@ -886,7 +933,7 @@ async function loadCloudState() {
     if (remoteIsReady) {
       replaceLocalState(cloudText);
       saveLocalMedia();
-      applyTextState(cloudText);
+      applyTextState(cloudText, true);
     } else {
       applyTextState(localText);
     }
@@ -896,7 +943,8 @@ async function loadCloudState() {
     cloudLoaded = true;
     savedVersion = changeVersion;
 
-    if (!remoteIsReady && Object.keys(localText).length > 0) {
+    const needsSchemaMigration = Boolean(row) && sourceSchemaVersion < SCHEMA_VERSION;
+    if (needsSchemaMigration || (!remoteIsReady && (Object.keys(localText).length > 0 || Object.keys(localMedia).length > 0))) {
       changeVersion += 1;
       await saveCloudState();
     } else {
@@ -924,9 +972,10 @@ async function pullLatestCloudState() {
   try {
     const row = await fetchCloudRow();
     if (!row || row.updated_at === remoteUpdatedAt) return;
-    const remoteText = row.content?.text && typeof row.content.text === "object"
+    const rawRemoteText = row.content?.text && typeof row.content.text === "object"
       ? row.content.text
       : {};
+    const remoteText = migrateTextState(rawRemoteText, row.content?.schemaVersion);
     const remoteMedia = row.content?.media && typeof row.content.media === "object"
       ? row.content.media
       : {};
@@ -935,7 +984,7 @@ async function pullLatestCloudState() {
     remoteUpdatedAt = row.updated_at || "";
     replaceLocalState(cloudText);
     saveLocalMedia();
-    applyTextState(cloudText);
+    applyTextState(cloudText, true);
     applyAvatarMedia();
     setSaveState("已同步云端最新版", "saved");
   } catch (error) {
@@ -1074,7 +1123,7 @@ document.getElementById("exportBtn").onclick = () => {
   const blob = new Blob([JSON.stringify({
     text:data,
     media:cloudMedia,
-    schemaVersion:3
+    schemaVersion:SCHEMA_VERSION
   }, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -1107,7 +1156,7 @@ document.getElementById("importFile").onchange = async e => {
       : cloudMedia;
     replaceLocalState(cloudText);
     saveLocalMedia();
-    applyTextState(cloudText);
+    applyTextState(cloudText, true);
     applyAvatarMedia();
     changeVersion += 1;
     await saveCloudState();
