@@ -188,7 +188,7 @@ button { cursor:pointer; }
   width:100%;
   height:100%;
   display:block;
-  object-fit:contain;
+  object-fit:cover;
   object-position:top center;
 }
 
@@ -222,6 +222,37 @@ button { cursor:pointer; }
   border-radius:12px;
   background:#f7f7f7;
 }
+.avatar-upload-panel {
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:10px 12px;
+  align-items:center;
+  padding-top:14px;
+}
+.avatar-upload-button {
+  border:0;
+  border-radius:10px;
+  background:#111;
+  color:#fff;
+  padding:10px 14px;
+  font-weight:700;
+}
+.avatar-upload-button:disabled { opacity:.45; cursor:wait; }
+.avatar-upload-state {
+  font-size:11px;
+  line-height:1.55;
+  color:#777;
+}
+.avatar-upload-state[data-state="saving"] { color:#9a7200; }
+.avatar-upload-state[data-state="saved"] { color:#2d6d46; }
+.avatar-upload-state[data-state="error"] { color:#a13a3a; }
+.avatar-upload-hint {
+  grid-column:1 / -1;
+  margin:0;
+  font-size:11px;
+  line-height:1.6;
+  color:#888;
+}
 .avatar-close {
   position:absolute;
   top:12px;
@@ -243,7 +274,7 @@ button { cursor:pointer; }
 }
 .posts {
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(2,1fr);
   gap:12px;
 }
 .post {
@@ -261,10 +292,10 @@ button { cursor:pointer; }
   color:#999;
   letter-spacing:.06em;
 }
-.post-time {
-  font-size:34px;
+.post-status {
+  font-size:24px;
   font-weight:800;
-  letter-spacing:-.05em;
+  letter-spacing:-.03em;
   margin:12px 0 8px;
 }
 .post-play { font-size:11px; color:#555; margin-bottom:12px; }
@@ -316,6 +347,20 @@ button { cursor:pointer; }
   font-size:11px;
   line-height:1.6;
   color:#666;
+}
+.originality-rule {
+  margin-top:12px;
+  padding:12px;
+  border-radius:10px;
+  background:#111;
+  color:#fff;
+}
+.originality-rule b { display:block; margin-bottom:5px; font-size:11px; }
+.originality-rule p {
+  margin:0;
+  font-size:11px;
+  line-height:1.65;
+  color:#cfcfcf;
 }
 .stock-rule {
   margin-top:14px;
@@ -422,13 +467,14 @@ button { cursor:pointer; }
   <div class="intro">
     <div class="intro-copy">
       <div class="intro-title" data-edit data-key="intro_title">KENZO 新账号上线方案</div>
-      <div class="intro-text" data-edit data-key="intro_text">账号本身先从 5 组方向里选：名称、简介、头像和想法理由放在左侧，右侧直接看 3 张完整的小红书主页模拟图。第一周同时测试三种已经确认的内容玩法和 10:00 / 17:00 两个发布时间。前两周只发小红书，不发抖音；小红书稳定后，再把同主题延展成动图 / 轻动态版本去抖音。</div>
+      <div class="intro-text" data-edit data-key="intro_text">账号本身先从 5 组方向里选：名称、简介、头像和想法理由放在左侧，右侧直接看 3 张同尺寸的小红书主页模拟图。第一周最多先测 2 篇，先熟悉流程、找到内容节奏，不绑定固定星期或具体时段；之后稳定到每周 3 篇，素材和成片都准备充分时再尝试 4 篇。SS27 新品到货后，内容选品以 SS27、KENZO Signature 和 Jumping Tiger 为主。</div>
     </div>
     <div class="chips">
       <span class="chip">电脑版</span>
-      <span class="chip">每周 3 篇</span>
+      <span class="chip">首周最多 2 篇</span>
+      <span class="chip">稳定 3 篇 · 余量够再 4 篇</span>
       <span class="chip">周日不发</span>
-      <span class="chip">前两周只发小红书</span>
+      <span class="chip">先把小红书跑稳</span>
       <span class="chip">SS27 + Signature + Jumping Tiger</span>
       <span class="chip">Digital 库存优先</span>
     </div>
@@ -437,7 +483,7 @@ button { cursor:pointer; }
   <section id="accounts" class="section">
     <div class="section-head">
       <div class="section-index">01 / ACCOUNT</div>
-      <div class="section-desc">每组固定四列：第一列只放账号名称、简介、想法 / 理由和 3 个头像候选；后面 3 列直接放之前已经确认过的小红书主页模拟图。15 张模拟图全部使用原图，不重新生成、不裁切、不变形。</div>
+      <div class="section-desc">每组固定四列：第一列放账号名称、简介、想法 / 理由和 3 个头像候选；后面 3 列放已经确认过的小红书主页模拟图。三张图现在统一按同一画幅铺满，第三张会自动放大填满，不再出现视觉尺寸偏小；头像可点开查看，也可在弹窗里替换成高清原图。</div>
     </div>
     <div id="accountGroups" class="account-groups"></div>
   </section>
@@ -445,80 +491,74 @@ button { cursor:pointer; }
   <section id="week1" class="section">
     <div class="section-head">
       <div class="section-index">02 / WEEK 01</div>
-      <div class="section-desc">第一周对应三种玩法：顺着细节跑偏 / 换个方式出场 / 衣服换个说法。发布时间先用 10:00 和 17:00 两个时段做初步测试，第二周再把时段反过来。</div>
+      <div class="section-desc">第一周最多只做 2 篇，不预设固定星期和发布时间，先把制作流程跑顺并找到节奏。测试只借鉴参考里的“连续输出、多窗口、卡片滑入”这些视觉机制，场景、构图、文案和产品逻辑都重新转译成 KENZO 自己的玩法，不复制原案例。</div>
     </div>
 
     <div class="week-layout">
       <div class="posts">
         <article class="post">
-          <div class="post-meta"><span>MON · POST 01</span><span>SS27</span></div>
-          <div class="post-time" data-edit data-key="w1_time1">10:00</div>
-          <div class="post-play" data-edit data-key="w1_play1">玩法 01 · 顺着细节跑偏</div>
-          <h4 data-edit data-key="w1_title1">从 Hanamai 的一朵花开始，把细节一路玩成完整视觉。</h4>
-          <p data-edit data-key="w1_body1">从花形、颜色、线条或局部元素开始，不急着亮出整件。让一个真实细节成为整篇内容的视觉线索，最后再回到完整产品 / Look。</p>
-          <div class="product" data-edit data-key="w1_product1">产品：SS27 / Hanamai；China Digital / Digital 有数量的款优先。</div>
-          <div class="goal" data-edit data-key="w1_goal1">重点看：收藏、翻页、评论里是否会主动提到产品细节。</div>
+          <div class="post-meta"><span>TEST · POST 01</span><span>首周优先</span></div>
+          <div class="post-status" data-edit data-key="w1_time1">完成即发 · 不设时段</div>
+          <div class="post-play" data-edit data-key="w1_play1">玩法 01 · 顺着细节跑偏 × 衣服换个说法</div>
+          <h4 data-edit data-key="w1_title1">不是“打印穿搭”，而是让一个 KENZO 细节连续输出不同答案。</h4>
+          <p data-edit data-key="w1_body1">借鉴长条连续画面的信息密度，但不复刻打印机场景。先选一朵花、一笔 Signature、虎的动作线或一个工艺局部，做成 KENZO「PLAY OUTPUT 001」纵向长条：同一细节依次跑偏成 3–4 个穿法或构图，最后落回完整 Look。小红书可用长图或 6 页轮播，拍摄改用桌面、墙面或手持展开，避免沿用参考构图。</p>
+          <div class="product" data-edit data-key="w1_product1">选品：SS27 到货前先用现有 Signature / Jumping Tiger 验证形式；新品到货后以 SS27 为主线，并用 Signature、Jumping Tiger 做系列承接。Digital 可用库存优先。</div>
+          <div class="goal" data-edit data-key="w1_goal1">重点看：收藏、完整翻页，以及评论是否主动提到某个细节或想看哪一种穿法。</div>
         </article>
 
         <article class="post">
-          <div class="post-meta"><span>WED · POST 02</span><span>SIGNATURE</span></div>
-          <div class="post-time" data-edit data-key="w1_time2">17:00</div>
-          <div class="post-play" data-edit data-key="w1_play2">玩法 02 · 换个方式出场</div>
-          <h4 data-edit data-key="w1_title2">先看到一笔，再看到完整的 Signature。</h4>
-          <p data-edit data-key="w1_body2">从手签体的一笔、局部 Logo、面料或轮廓开始，逐页 reveal；最后才把完整单品和上身放出来，让产品换一种出现顺序。</p>
-          <div class="product" data-edit data-key="w1_product2">产品：KENZO Signature；Digital 库存优先。</div>
-          <div class="goal" data-edit data-key="w1_goal2">重点看：翻页深度、最后一页抵达、产品记忆。</div>
-        </article>
-
-        <article class="post">
-          <div class="post-meta"><span>FRI · POST 03</span><span>JUMPING TIGER</span></div>
-          <div class="post-time" data-edit data-key="w1_time3">10:00</div>
-          <div class="post-play" data-edit data-key="w1_play3">玩法 03 · 衣服换个说法</div>
-          <h4 data-edit data-key="w1_title3">把 Jumping Tiger 翻译成一张“玩家档案 / 卡牌”。</h4>
-          <p data-edit data-key="w1_body3">把产品先变成大家熟悉的视觉形式：属性、颜色、情绪、搭配关键词、可一起玩的单品，最后再回到真实产品。</p>
-          <div class="product" data-edit data-key="w1_product3">产品：Jumping Tiger；以确认可用的 China Digital / Digital 实际库存为准。</div>
-          <div class="goal" data-edit data-key="w1_goal3">重点看：收藏、分享，以及形式有没有帮助用户记住产品。</div>
+          <div class="post-meta"><span>TEST · POST 02</span><span>首周备齐再发</span></div>
+          <div class="post-status" data-edit data-key="w1_time2">看成片状态发布</div>
+          <div class="post-play" data-edit data-key="w1_play2">玩法 02 · 换个方式出场 × 多窗口选择</div>
+          <h4 data-edit data-key="w1_title2">把同一件 KENZO 拆进多个“玩家窗口”，让用户自己拼出最后一套。</h4>
+          <p data-edit data-key="w1_body2">吸收机舱屏幕矩阵和视频里卡片滑入、换位的节奏，但不用机舱，也不用衣架。做一个 KENZO PLAYER「选装台」：3–6 个相同窗口分别放颜色、细节、单品和上身局部，逐页更换组合，最后合成完整 Look。小红书先做静态轮播；等节奏稳定后，抖音可直接延展成卡片滑入的轻动态。</p>
+          <div class="product" data-edit data-key="w1_product2">选品：可先用 Signature 的笔画与 Jumping Tiger 的动作感测试窗口组合；SS27 到货后，把新品作为主角，三条产品线轮换进入同一套玩家系统。</div>
+          <div class="goal" data-edit data-key="w1_goal2">重点看：翻页深度、评论选择哪一套、收藏，以及最后完整 Look 的抵达率。</div>
         </article>
       </div>
 
       <aside class="pace">
-        <div class="pace-title">前两周发布节奏</div>
-        <div class="pace-item"><b>WEEK 01</b><p data-edit data-key="pace1">小红书：周一 10:00 / 周三 17:00 / 周五 10:00。周日不发。</p></div>
-        <div class="pace-item"><b>WEEK 02</b><p data-edit data-key="pace2">小红书：周一 17:00 / 周三 10:00 / 周五 17:00。继续三种玩法，把第一周表现更好的方向做第二轮。</p></div>
-        <div class="pace-item"><b>WEEK 03+</b><p data-edit data-key="pace3">等小红书节奏稳定后再启动抖音。同一主题优先改成动图 / 轻动态，不重新做一套完全不同的内容。</p></div>
+        <div class="pace-title">从试跑到稳定节奏</div>
+        <div class="pace-item"><b>WEEK 01</b><p data-edit data-key="pace1">最多 2 篇。先熟悉协作、拍摄和出图流程，哪篇先准备好就先发，不硬卡星期或时间。</p></div>
+        <div class="pace-item"><b>WEEK 02</b><p data-edit data-key="pace2">根据第一周效率做 2–3 篇；流程顺、素材够就到 3 篇，不为凑数量牺牲完成度。</p></div>
+        <div class="pace-item"><b>STABLE</b><p data-edit data-key="pace3">稳定后以每周 3 篇为常态；有成熟备稿和足够素材时可尝试 4 篇。周日仍不发，发布时间跟随成片状态与账号数据调整。</p></div>
+        <div class="originality-rule">
+          <b data-edit data-key="originality_title">原创边界 · 借机制，不借场景</b>
+          <p data-edit data-key="originality_body">保留“连续输出、多窗口、卡片换位”的启发；不使用参考里的工业打印机、机舱或红色衣架，不复刻构图和文案，全部换成 KENZO 玩家语境与真实产品细节。</p>
+        </div>
       </aside>
     </div>
 
     <div class="stock-rule">
       <b>选品规则：Digital 先行</b>
-      <span data-edit data-key="stock_rule">Buying Tools 里 China Digital / Digital 有数量的款优先使用；上线第一波围绕 SS27 + Signature + Jumping Tiger。</span>
+      <span data-edit data-key="stock_rule">SS27 到货前，用现有 Digital 可用货先把形式跑通；新品到货后，以 SS27 为主线，KENZO Signature 与 Jumping Tiger 作为稳定系列承接。每篇最终选品以 China Digital / Digital 实际可用库存为准。</span>
     </div>
   </section>
 
   <section id="workflow" class="section">
     <div class="section-head">
       <div class="section-index">03 / WORKFLOW</div>
-      <div class="section-desc">沿用之前网页里已经确定的工作节奏：周一复盘，周二把下一周三篇结构定掉，周三集中拍，周四编辑制作，周五发布并锁定下周。尽量不做“当天拍当天发”。</div>
+      <div class="section-desc">保留“先复盘、再准备、集中拍、集中做”的工作逻辑，但把制作日和发布日拆开：不要求周一 / 周三 / 周五固定发，也不绑定具体时段。第一周先保证 2 篇完整跑通，再逐步增加。</div>
     </div>
 
     <div class="workflow">
       <div class="wf">
         <div class="wf-day">MONDAY</div>
         <h4 data-edit data-key="wf1h">复盘 + 选品</h4>
-        <p data-edit data-key="wf1p">复盘上一周三种玩法的数据；从 Digital 可用货里确定下一周产品，先找每件最值得玩的真实细节。</p>
-        <span class="wf-tag">同时发布当周 Post 01</span>
+        <p data-edit data-key="wf1p">复盘已发内容的数据和制作耗时；从 Digital 可用货里确定下一批产品，先找每件最值得玩的真实细节。</p>
+        <span class="wf-tag">不绑定发布</span>
       </div>
       <div class="wf">
         <div class="wf-day">TUESDAY</div>
         <h4 data-edit data-key="wf2h">结构 + Shot List</h4>
-        <p data-edit data-key="wf2p">把下一周三篇的首图、页序、局部、完整 Look、人物、道具、标题和 caption 方向一次定清。</p>
+        <p data-edit data-key="wf2p">首周只把 2 篇的首图、页序、局部、完整 Look、人物、道具、标题和 caption 方向定清；稳定后再按 3 篇准备。</p>
         <span class="wf-tag">PREP</span>
       </div>
       <div class="wf">
         <div class="wf-day">WEDNESDAY</div>
         <h4 data-edit data-key="wf3h">集中拍摄</h4>
-        <p data-edit data-key="wf3p">一次拍齐完整 Look、产品细节、人物 / 手部、空景和可复用素材，为下一周三篇建立素材池。</p>
-        <span class="wf-tag">同时发布当周 Post 02</span>
+        <p data-edit data-key="wf3p">一次拍齐完整 Look、产品细节、人物 / 手部、空景和可复用素材。先覆盖 2 篇，余量足时再多拍一组。</p>
+        <span class="wf-tag">集中建立素材池</span>
       </div>
       <div class="wf">
         <div class="wf-day">THURSDAY</div>
@@ -528,13 +568,13 @@ button { cursor:pointer; }
       </div>
       <div class="wf">
         <div class="wf-day">FRIDAY</div>
-        <h4 data-edit data-key="wf5h">发布 + 锁定下周</h4>
-        <p data-edit data-key="wf5p">发布第三篇；记录本周数据，决定哪些玩法继续、哪些需要调整，并锁定下一周三篇草稿。</p>
-        <span class="wf-tag">Post 03 · 周日不发</span>
+        <h4 data-edit data-key="wf5h">检查 + 内容排队</h4>
+        <p data-edit data-key="wf5p">检查已完成内容，根据成片状态决定发布顺序；记录数据与耗时，决定哪些玩法继续，并给下一周留出可执行的草稿。</p>
+        <span class="wf-tag">周日不发</span>
       </div>
     </div>
 
-    <div class="workflow-note" data-edit data-key="workflow_note">核心：每周 3 篇、三种玩法不变；跑通的是玩法，不是某一条孤立内容。前两周先把小红书跑稳，再接抖音动图。</div>
+    <div class="workflow-note" data-edit data-key="workflow_note">核心：第一周最多 2 篇，先熟悉、找节奏；稳定后 3 篇常态，素材和人员余量都足时再到 4 篇。发布不绑定具体时段或固定星期；先把小红书跑稳，再把同主题转成抖音轻动态。</div>
   </section>
 
   <footer class="footer">
@@ -548,6 +588,12 @@ button { cursor:pointer; }
     <div id="avatarDialogLabel" class="avatar-view-label">头像原图</div>
     <button id="avatarClose" class="avatar-close" type="button" aria-label="关闭头像原图">×</button>
     <img id="avatarFull" class="avatar-full" alt="头像候选原图">
+    <div class="avatar-upload-panel">
+      <button id="avatarUploadBtn" class="avatar-upload-button" type="button" disabled>上传 / 替换高清原图</button>
+      <span id="avatarUploadState" class="avatar-upload-state">正在连接云端…</span>
+      <p class="avatar-upload-hint" data-edit data-key="avatar_upload_hint">现有候选图只有低清版本时，网页无法凭空恢复细节。可在这里上传你手里的高清图；替换后会自动保存到云端，其他人打开同一页面也能看到。</p>
+      <input id="avatarUploadInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+    </div>
   </div>
 </dialog>
 
@@ -557,15 +603,18 @@ const MOCKUPS = ["data:image/webp;base64,UklGRhrdAQBXRUJQVlA4IA7dAQBQnQWdASrQAv8
 const GROUPS = [{"name": "KENZO（玩家版）", "bio": "衣服从来不只有一种答案\n在这里，打开 KENZO 未被发现的穿搭玩法\n让每一次穿着，都成为一次新的探索", "reason": "像给品牌打开一个“玩家模式”。名称最直接，既保留 KENZO 身份，又清楚告诉用户：这里不是常规官号视角，而是一个专门发现新穿法的版本。", "avatars": [0, 5, 10], "mockups": [0, 5, 10]}, {"name": "KENZO肯玩", "bio": "风格，总是在尝试里慢慢发生\n从一件 KENZO 出发，试着穿出更多可能\n好玩的，从来不止一种", "reason": "“肯玩”本身有记忆点，也和 KENZO 的中文语感自然连在一起。更轻、更像内容号，直接表达这个账号愿意试、愿意玩。", "avatars": [1, 6, 11], "mockups": [1, 6, 11]}, {"name": "KENZO玩家入口", "bio": "一件衣服，也可以通往不同的风格\n从这里进入 KENZO 的穿搭新世界\n去发现更多还没试过的玩法", "reason": "“入口”感最强，像进入一个新的玩法世界。和账号本身作为一个新的浏览 / 发现空间很匹配，也方便以后延展不同栏目。", "avatars": [2, 7, 12], "mockups": [2, 7, 12]}, {"name": "KENZO出没", "bio": "熟悉的衣服，也会有陌生的一面\n当 KENZO 落进不同的搭配与风格里\n新的穿法，也在其中悄悄出现", "reason": "更像小红书原生账号名，不端着。“出没”有一种被捕捉到的新鲜感，适合承接细节、穿法和意外灵感不断出现的内容。", "avatars": [3, 8, 13], "mockups": [3, 8, 13]}, {"name": "野生掉落 KENZO", "bio": "有些穿法，往往发生在意料之外\n让 KENZO 在不同搭配里自由碰撞\n偶然，也能成为新的灵感", "reason": "最不像传统品牌号的一组，自由度最高，也最有“掉落”感。适合强化不按标准答案来的穿搭灵感和偶然碰撞。", "avatars": [4, 9, 14], "mockups": [4, 9, 14]}];
 
 const CLOUD_URL = "https://mysbpummazvgyesuhlfg.supabase.co";
-const CLOUD_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15c2JwdW1tYXp2Z3llc3VobGZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNjc3NDMsImV4cCI6MjEwMzg0Mzc0M30.VLwxADqTs4_jRveJ0mbt-9CAGceObRShSno8nuJiiFY";
+const CLOUD_KEY = "sb_publishable_i6t7GeNNK3FY1yG4osThYw_39OtCCAS";
 const CLOUD_ROW = "launch-v2";
 const STORAGE_PREFIX = "kenzo_launch_v2_";
+const MEDIA_STORAGE_KEY = "kenzo_launch_media_v3";
+const MEDIA_BUCKET = "kenzo-social-media";
 const CLOUD_HEADERS = {
   apikey: CLOUD_KEY,
   Authorization: "Bearer " + CLOUD_KEY
 };
 
 let cloudText = {};
+let cloudMedia = {};
 let remoteUpdatedAt = "";
 let cloudLoaded = false;
 let applyingSavedText = false;
@@ -595,7 +644,7 @@ function renderAccounts() {
         </div>
         <div class="small-label avatar-label" data-edit data-key="acc_${idx}_avatar_label">头像候选</div>
         <div class="avatar-row">
-          ${g.avatars.map((i, avatarIndex) => `<button class="avatar-button" type="button" data-avatar="${i}" aria-label="查看头像候选 ${avatarIndex+1} 原图" title="点击查看原图"><img src="${AVATARS[i]}" alt="头像候选 ${avatarIndex+1}"></button>`).join("")}
+          ${g.avatars.map((i, avatarIndex) => `<button class="avatar-button" type="button" data-avatar="${i}" aria-label="查看头像候选 ${avatarIndex+1} 原图" title="点击查看原图或上传高清图"><img src="${esc(getAvatarSource(i))}" alt="头像候选 ${avatarIndex+1}"></button>`).join("")}
         </div>
       </div>
 
@@ -667,13 +716,31 @@ function readLocalState() {
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const storageKey = localStorage.key(i);
-      if (!storageKey || !storageKey.startsWith(STORAGE_PREFIX)) continue;
+      if (!storageKey || storageKey === MEDIA_STORAGE_KEY || !storageKey.startsWith(STORAGE_PREFIX)) continue;
       data[storageKey.slice(STORAGE_PREFIX.length)] = localStorage.getItem(storageKey) || "";
     }
   } catch (error) {
     console.warn("Local storage is unavailable", error);
   }
   return data;
+}
+
+function readLocalMedia() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(MEDIA_STORAGE_KEY) || "{}");
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch (error) {
+    console.warn("Could not read local avatar replacements", error);
+    return {};
+  }
+}
+
+function saveLocalMedia() {
+  try {
+    localStorage.setItem(MEDIA_STORAGE_KEY, JSON.stringify(cloudMedia));
+  } catch (error) {
+    console.warn("Could not save avatar replacements locally", error);
+  }
 }
 
 function saveLocalValue(key, value) {
@@ -710,6 +777,18 @@ function applyTextState(data) {
   applyingSavedText = false;
 }
 
+function getAvatarSource(index) {
+  return cloudMedia[`avatar_${index}`] || AVATARS[index];
+}
+
+function applyAvatarMedia() {
+  document.querySelectorAll("[data-avatar]").forEach(button => {
+    const index = Number(button.dataset.avatar);
+    const image = button.querySelector("img");
+    if (image) image.src = getAvatarSource(index);
+  });
+}
+
 function setSaveState(text, state = "") {
   const status = document.getElementById("saveState");
   status.textContent = text;
@@ -744,6 +823,7 @@ async function saveCloudState(options = {}) {
   let saveSucceeded = false;
   const versionBeingSaved = changeVersion;
   const snapshot = { ...cloudText };
+  const mediaSnapshot = { ...cloudMedia };
   const updatedAt = new Date().toISOString();
   setSaveState("正在保存到云端…", "saving");
 
@@ -759,7 +839,7 @@ async function saveCloudState(options = {}) {
         },
         body:JSON.stringify({
           id:CLOUD_ROW,
-          content:{ text:snapshot, initialized:true, schemaVersion:2 },
+          content:{ text:snapshot, media:mediaSnapshot, initialized:true, schemaVersion:3 },
           updated_at:updatedAt
         }),
         cache:"no-store",
@@ -794,16 +874,23 @@ async function loadCloudState() {
     const remoteText = row?.content?.text && typeof row.content.text === "object"
       ? row.content.text
       : {};
+    const remoteMedia = row?.content?.media && typeof row.content.media === "object"
+      ? row.content.media
+      : {};
     const remoteIsReady = Boolean(row?.content?.initialized) || Object.keys(remoteText).length > 0;
     const localText = readLocalState();
+    const localMedia = readLocalMedia();
 
     cloudText = remoteIsReady ? { ...remoteText } : { ...localText };
+    cloudMedia = remoteIsReady ? { ...localMedia, ...remoteMedia } : { ...localMedia };
     if (remoteIsReady) {
       replaceLocalState(cloudText);
+      saveLocalMedia();
       applyTextState(cloudText);
     } else {
       applyTextState(localText);
     }
+    applyAvatarMedia();
 
     remoteUpdatedAt = row?.updated_at || "";
     cloudLoaded = true;
@@ -815,15 +902,20 @@ async function loadCloudState() {
     } else {
       setSaveState("云端已同步 · 自动保存", "saved");
     }
+    document.getElementById("avatarUploadState").textContent = "可上传 JPG / PNG / WebP 高清图";
   } catch (error) {
     console.error("Cloud load failed", error);
     cloudText = readLocalState();
+    cloudMedia = readLocalMedia();
     applyTextState(cloudText);
+    applyAvatarMedia();
     cloudLoaded = true;
     savedVersion = changeVersion;
     setSaveState("云端连接失败 · 可继续编辑", "error");
+    document.getElementById("avatarUploadState").textContent = "云端暂未连接，请稍后再上传";
   } finally {
     editButton.disabled = false;
+    document.getElementById("avatarUploadBtn").disabled = !cloudLoaded;
   }
 }
 
@@ -835,10 +927,16 @@ async function pullLatestCloudState() {
     const remoteText = row.content?.text && typeof row.content.text === "object"
       ? row.content.text
       : {};
+    const remoteMedia = row.content?.media && typeof row.content.media === "object"
+      ? row.content.media
+      : {};
     cloudText = { ...remoteText };
+    cloudMedia = { ...remoteMedia };
     remoteUpdatedAt = row.updated_at || "";
     replaceLocalState(cloudText);
+    saveLocalMedia();
     applyTextState(cloudText);
+    applyAvatarMedia();
     setSaveState("已同步云端最新版", "saved");
   } catch (error) {
     console.warn("Cloud refresh failed", error);
@@ -868,6 +966,15 @@ document.addEventListener("click", e => {
 const avatarDialog = document.getElementById("avatarDialog");
 const avatarFull = document.getElementById("avatarFull");
 const avatarDialogLabel = document.getElementById("avatarDialogLabel");
+const avatarUploadBtn = document.getElementById("avatarUploadBtn");
+const avatarUploadInput = document.getElementById("avatarUploadInput");
+const avatarUploadState = document.getElementById("avatarUploadState");
+let activeAvatarIndex = null;
+
+function setAvatarUploadState(text, state = "") {
+  avatarUploadState.textContent = text;
+  avatarUploadState.dataset.state = state;
+}
 
 function closeAvatarDialog() {
   if (typeof avatarDialog.close === "function" && avatarDialog.open) {
@@ -881,14 +988,78 @@ document.addEventListener("click", e => {
   const button = e.target.closest("[data-avatar]");
   if (!button) return;
   const avatarIndex = Number(button.dataset.avatar);
-  avatarFull.src = AVATARS[avatarIndex];
+  activeAvatarIndex = avatarIndex;
+  avatarFull.src = getAvatarSource(avatarIndex);
   avatarDialogLabel.textContent = button.getAttribute("aria-label") || "头像原图";
+  setAvatarUploadState(cloudMedia[`avatar_${avatarIndex}`]
+    ? "当前为已上传的高清替换图，可继续替换"
+    : "原文件清晰度有限，可上传高清图替换");
   if (typeof avatarDialog.showModal === "function") {
     if (!avatarDialog.open) avatarDialog.showModal();
   } else {
     avatarDialog.setAttribute("open", "");
   }
 });
+
+avatarUploadBtn.onclick = () => {
+  if (activeAvatarIndex === null || !cloudLoaded) return;
+  avatarUploadInput.click();
+};
+
+avatarUploadInput.onchange = async e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file || activeAvatarIndex === null) return;
+  if (!file.type.startsWith("image/")) {
+    setAvatarUploadState("请选择图片文件", "error");
+    e.target.value = "";
+    return;
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    setAvatarUploadState("图片超过 20MB，请压缩后再上传", "error");
+    e.target.value = "";
+    return;
+  }
+
+  const indexBeingUploaded = activeAvatarIndex;
+  const rawExtension = (file.name.split(".").pop() || file.type.split("/")[1] || "jpg").toLowerCase();
+  const extension = rawExtension.replace(/[^a-z0-9]/g, "") || "jpg";
+  const path = `launch-v2/avatars/avatar-${indexBeingUploaded}-${Date.now()}.${extension}`;
+  avatarUploadBtn.disabled = true;
+  setAvatarUploadState("高清头像上传中…", "saving");
+
+  try {
+    const response = await fetch(`${CLOUD_URL}/storage/v1/object/${MEDIA_BUCKET}/${path}`, {
+      method:"POST",
+      headers:{
+        ...CLOUD_HEADERS,
+        "Content-Type":file.type || "image/jpeg",
+        "x-upsert":"true"
+      },
+      body:file
+    });
+    if (!response.ok) throw new Error(await response.text());
+
+    const publicUrl = `${CLOUD_URL}/storage/v1/object/public/${MEDIA_BUCKET}/${path}`;
+    cloudMedia[`avatar_${indexBeingUploaded}`] = publicUrl;
+    saveLocalMedia();
+    applyAvatarMedia();
+    if (activeAvatarIndex === indexBeingUploaded) avatarFull.src = publicUrl;
+    changeVersion += 1;
+    await saveCloudState();
+    setAvatarUploadState(
+      changeVersion <= savedVersion
+        ? "高清头像已上传并自动保存到云端"
+        : "图片已上传，云端状态会在网络恢复后自动保存",
+      changeVersion <= savedVersion ? "saved" : "error"
+    );
+  } catch (error) {
+    console.error("Avatar upload failed", error);
+    setAvatarUploadState("上传失败，请检查网络后重试", "error");
+  } finally {
+    avatarUploadBtn.disabled = false;
+    e.target.value = "";
+  }
+};
 
 document.getElementById("avatarClose").onclick = closeAvatarDialog;
 avatarDialog.addEventListener("click", e => {
@@ -900,7 +1071,11 @@ document.getElementById("exportBtn").onclick = () => {
   document.querySelectorAll("[data-key]").forEach(el => {
     data[el.dataset.key] = el.innerText;
   });
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const blob = new Blob([JSON.stringify({
+    text:data,
+    media:cloudMedia,
+    schemaVersion:3
+  }, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "kenzo-launch-content.json";
@@ -918,13 +1093,22 @@ document.getElementById("importFile").onchange = async e => {
   try {
     const data = JSON.parse(await f.text());
     if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Invalid data");
+    const textData = data.text && typeof data.text === "object" && !Array.isArray(data.text)
+      ? data.text
+      : data;
     const normalized = {};
-    Object.entries(data).forEach(([key, value]) => {
+    Object.entries(textData).forEach(([key, value]) => {
+      if (key === "media" || key === "schemaVersion") return;
       normalized[key] = String(value);
     });
     cloudText = normalized;
+    cloudMedia = data.media && typeof data.media === "object" && !Array.isArray(data.media)
+      ? { ...data.media }
+      : cloudMedia;
     replaceLocalState(cloudText);
+    saveLocalMedia();
     applyTextState(cloudText);
+    applyAvatarMedia();
     changeVersion += 1;
     await saveCloudState();
     e.target.value = "";
