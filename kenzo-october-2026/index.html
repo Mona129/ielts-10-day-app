@@ -54,8 +54,9 @@
     </section>
   </main>
   <aside class="editor-bar" id="editorBar" hidden>
-    <div class="editor-line"><strong>编辑模式</strong><label>第二篇首选 <select id="priority"><option value="A">格纹开衫 A</option><option value="B">郁金香 B</option></select></label><button id="publish" type="button">保存并同步公开页</button><a href="./">退出编辑</a></div>
-    <div class="editor-line"><label class="token-label">GitHub 写入令牌 <input id="token" type="password" autocomplete="off" placeholder="同步公开页时填写"></label><a class="token-help" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" title="仅选择 ielts-10-day-app 仓库，并将 Contents 设为 Read and write。令牌只在当前页面使用，不保存在网页中。">首次设置 ↗</a><span id="editorStatus" role="status">点击页面文字即可修改，草稿会自动保存在此浏览器。</span></div>
+    <div class="editor-line"><strong>编辑模式</strong><label>第二篇首选 <select id="priority"><option value="A">格纹开衫 A</option><option value="B">郁金香 B</option></select></label><button id="publish" type="button">保存并同步公开页</button><button id="copyDraft" class="secondary" type="button">复制草稿</button><a href="./">退出编辑</a></div>
+    <div class="editor-line"><label class="token-label">GitHub 写入令牌 <input id="token" type="password" autocomplete="off" placeholder="同步公开页时填写"></label><a class="token-help" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">新建有写入权限的令牌 ↗</a><span id="editorStatus" role="status">点击页面文字即可修改，草稿会自动保存在此浏览器。</span></div>
+    <div class="editor-line editor-help">令牌设置：Resource owner 选 Mona129；Repository access 只选 ielts-10-day-app；Repository permissions 中 Contents 选 Read and write。生成后填在这里，不要发给别人。</div>
   </aside>
 </body>
 </html>

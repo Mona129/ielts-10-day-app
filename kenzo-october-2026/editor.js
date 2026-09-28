@@ -9,6 +9,7 @@
   const bar = document.getElementById("editorBar");
   const select = document.getElementById("priority");
   const publish = document.getElementById("publish");
+  const copyDraft = document.getElementById("copyDraft");
   const setStatus = message => { if (status) status.textContent = message; };
 
   function apply() {
@@ -60,7 +61,11 @@
         headers: { ...headers, "Content-Type": "application/json" },
         body: JSON.stringify({ message: "Update KENZO October proposal", content: encodeUtf8(JSON.stringify(state, null, 2) + "\n"), sha: current.sha, branch: "main" })
       });
-      if (!updated.ok) throw new Error("同步未完成（" + updated.status + "）");
+      if (!updated.ok) {
+        if (updated.status === 403) throw new Error("同步被拒绝（403）：当前令牌没有本仓库的写入权限。请按下方设置新令牌，Contents 选 Read and write");
+        if (updated.status === 409) throw new Error("公开文件刚被更新（409），请保留草稿并重试");
+        throw new Error("同步未完成（" + updated.status + "）");
+      }
       setStatus("已提交公开更新。其他人刷新页面后可看到新内容；网页发布通常需要片刻。");
     } catch (error) {
       setStatus(error.message + "。草稿仍保存在此浏览器，可稍后重试。");
@@ -95,6 +100,14 @@
     });
     select.addEventListener("change", event => changePriority(event.target.value));
     publish.addEventListener("click", syncPublic);
+    copyDraft.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(JSON.stringify(state, null, 2));
+        setStatus("草稿已复制，内容不含 GitHub 令牌。");
+      } catch {
+        setStatus("浏览器不允许自动复制；草稿仍保存在此浏览器。");
+      }
+    });
   }
   init();
 })();
